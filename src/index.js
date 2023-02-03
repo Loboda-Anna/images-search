@@ -1,26 +1,29 @@
 import { Notify } from 'notiflix';
-import SimpleLightbox from 'simplelightbox';
-import 'simplelightbox/dist/simple-lightbox.min.css';
-import fetchImages from './fetchImages';
+import ImagesApiService from './fetchImages';
 
-let gallery = new SimpleLightbox('.gallery a', {
-  captionDelay: 250,
-  captionsData: 'alt',
-});
+// let gallery = new SimpleLightbox('.gallery a', {
+//   captionDelay: 250,
+//   captionsData: 'alt',
+// });
 const formEl = document.querySelector('#search-form');
 const inputEl = document.querySelector('form input');
 const galleryEl = document.querySelector('.gallery');
+const loadBtn = document.querySelector('.load-more');
+
+const imagesApiService = new ImagesApiService();
 
 formEl.addEventListener('submit', async e => {
   e.preventDefault();
   try {
     const formEl = e.target.elements;
     let searchQuery = inputEl.value.trim();
+    imagesApiService.searchQuery = searchQuery;
+
     if (!searchQuery) {
       return;
     }
 
-    const imgs = await fetchImages(searchQuery);
+    const imgs = await imagesApiService.fetchImages(searchQuery);
     if (imgs.hits.length === 0) {
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -47,7 +50,7 @@ function renderGallery(imgs) {
         comments,
         downloads,
       }) => `<div class="photo-card">
-  <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
+  <a href="${largeImageURL}"><div class="img__wrapper"><img src="${webformatURL}" alt="${tags}" loading="lazy"  /></div>
   <div class="info">
     <p class="info-item">
       <b>Likes</b>
@@ -65,9 +68,13 @@ ${comments}
       <b>Downloads</b>
       ${downloads}
     </p>
-  </div>
+  </div></a>
 </div>`
     )
     .join(' ');
   galleryEl.innerHTML = galleryMarkup;
 }
+
+loadBtn.addEventListener('click', onloadMore);
+
+async function onloadMore() {}
