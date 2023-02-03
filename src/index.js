@@ -1,6 +1,12 @@
 import { Notify } from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import fetchImages from './fetchImages';
 
+let gallery = new SimpleLightbox('.gallery a', {
+  captionDelay: 250,
+  captionsData: 'alt',
+});
 const formEl = document.querySelector('#search-form');
 const inputEl = document.querySelector('form input');
 const galleryEl = document.querySelector('.gallery');
@@ -20,14 +26,13 @@ formEl.addEventListener('submit', async e => {
         'Sorry, there are no images matching your search query. Please try again.'
       );
     } else {
-      Notify.success(`Hooray! We found ${imgs.totalHits} images.`);
+      Notify.success(`Hooray! We found ${imgs.total} images.`);
     }
     console.log(imgs);
     renderGallery(imgs);
   } catch (error) {
     console.log(error.message);
   }
-  //   e.currentTarget.reset();
 });
 
 function renderGallery(imgs) {
@@ -35,14 +40,14 @@ function renderGallery(imgs) {
     .map(
       ({
         webformatURL,
-        // largeImageURL,
+        largeImageURL,
         tags,
         likes,
         views,
         comments,
         downloads,
       }) => `<div class="photo-card">
-  <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+  <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
   <div class="info">
     <p class="info-item">
       <b>Likes</b>
