@@ -80,16 +80,19 @@ ${comments}
     )
     .join(' ');
   galleryEl.insertAdjacentHTML('beforeend', galleryMarkup);
+  if (imgs.hits.length < 40) {
+    loadMoreBtn.hide();
+    loadMoreBtn.disable();
+    Notify.info("We're sorry, but you've reached the end of search results.");
+  }
   loadMoreBtn.enable();
 }
 
 async function onloadMore() {
   loadMoreBtn.disable();
-  await imagesApiService.fetchImages(this.searchQuery).then(imgs => {
-    if (imgs.hits.length === 0) {
-      Notify.info("We're sorry, but you've reached the end of search results.");
-    } else renderGallery(imgs);
-  });
+  await imagesApiService
+    .fetchImages(this.searchQuery)
+    .then(imgs => renderGallery(imgs));
   loadMoreBtn.enable();
 }
 
