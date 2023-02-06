@@ -1,28 +1,34 @@
 import { Notify } from 'notiflix';
 import ImagesApiService from './fetchImages';
+import LoadMoreBtn from './load-more-btn';
 
-// let gallery = new SimpleLightbox('.gallery a', {
-//   captionDelay: 250,
-//   captionsData: 'alt',
-// });
 const formEl = document.querySelector('#search-form');
 const inputEl = document.querySelector('form input');
 const galleryEl = document.querySelector('.gallery');
-const loadBtn = document.querySelector('.load-more');
+formEl.addEventListener('submit', onSearchImages);
 
 const imagesApiService = new ImagesApiService();
 
-formEl.addEventListener('submit', async e => {
+const loadMoreBtn = new LoadMoreBtn({
+  selector: '[data-action="load-more"]',
+  hidden: true,
+});
+
+loadMoreBtn.refs.button.addEventListener('click', onloadMore);
+
+async function onSearchImages(e) {
   e.preventDefault();
+  loadMoreBtn.show();
+  loadMoreBtn.disable();
   try {
     const formEl = e.target.elements;
     let searchQuery = inputEl.value.trim();
     imagesApiService.searchQuery = searchQuery;
 
     if (!searchQuery) {
-      return;
+      return Notify.failure('Please, enter your search query!');
     }
-
+    imagesApiService.resetPage();
     const imgs = await imagesApiService.fetchImages(searchQuery);
     if (imgs.hits.length === 0) {
       Notify.failure(
@@ -31,12 +37,13 @@ formEl.addEventListener('submit', async e => {
     } else {
       Notify.success(`Hooray! We found ${imgs.total} images.`);
     }
-    console.log(imgs);
+    clearGallery();
     renderGallery(imgs);
+    loadMoreBtn.enable();
   } catch (error) {
-    console.log(error.message);
+    Notify.failure(`Sorry, ${error.message} Try again leter!`);
   }
-});
+}
 
 function renderGallery(imgs) {
   const galleryMarkup = imgs.hits
@@ -50,7 +57,7 @@ function renderGallery(imgs) {
         comments,
         downloads,
       }) => `<div class="photo-card">
-  <a href="${largeImageURL}"><div class="img__wrapper"><img src="${webformatURL}" alt="${tags}" loading="lazy"  /></div>
+  <a href="${largeImageURL}"><div class="img__wrapper"><img src="${webformatURL}" alt="${tags}" loading="lazy" class="gallery__image"  /></div>
   <div class="info">
     <p class="info-item">
       <b>Likes</b>
@@ -72,9 +79,20 @@ ${comments}
 </div>`
     )
     .join(' ');
-  galleryEl.innerHTML = galleryMarkup;
+  galleryEl.insertAdjacentHTML('beforeend', galleryMarkup);
+  loadMoreBtn.enable();
 }
 
-loadBtn.addEventListener('click', onloadMore);
+async function onloadMore() {
+  loadMoreBtn.disable();
+  await imagesApiService.fetchImages(this.searchQuery).then(imgs => {
+    if (imgs.hits.length === 0) {
+      Notify.info("We're sorry, but you've reached the end of search results.");
+    } else renderGallery(imgs);
+  });
+  loadMoreBtn.enable();
+}
 
-async function onloadMore() {}
+function clearGallery() {
+  galleryEl.innerHTML = ' ';
+}
