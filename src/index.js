@@ -18,8 +18,6 @@ loadMoreBtn.refs.button.addEventListener('click', onloadMore);
 
 async function onSearchImages(e) {
   e.preventDefault();
-  loadMoreBtn.show();
-  loadMoreBtn.disable();
   try {
     const formEl = e.target.elements;
     let searchQuery = inputEl.value.trim();
@@ -34,6 +32,7 @@ async function onSearchImages(e) {
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
+      return;
     } else {
       Notify.success(`Hooray! We found ${imgs.total} images.`);
     }
@@ -41,7 +40,8 @@ async function onSearchImages(e) {
     renderGallery(imgs);
     loadMoreBtn.enable();
   } catch (error) {
-    Notify.failure(`Sorry, ${error.message} Try again leter!`);
+    console.log(error.message);
+    Notify.failure(`Sorry, ${error.message} Try again later!`);
   }
 }
 
@@ -81,21 +81,31 @@ ${comments}
     .join(' ');
   galleryEl.insertAdjacentHTML('beforeend', galleryMarkup);
   if (imgs.hits.length < 40) {
+    Notify.info("We're sorry, but you've reached the end of search results.");
     loadMoreBtn.hide();
     loadMoreBtn.disable();
-    Notify.info("We're sorry, but you've reached the end of search results.");
+    return;
   }
   loadMoreBtn.enable();
+  loadMoreBtn.show();
 }
 
 async function onloadMore() {
   loadMoreBtn.disable();
-  await imagesApiService
-    .fetchImages(this.searchQuery)
-    .then(imgs => renderGallery(imgs));
+  try {
+    const imgs = await imagesApiService.fetchImages(this.searchQuery);
+    renderGallery(imgs);
+  } catch (error) {
+    console.log(error.message);
+  }
   loadMoreBtn.enable();
 }
 
 function clearGallery() {
   galleryEl.innerHTML = ' ';
 }
+galleryEl.addEventListener('click', e => {
+  if (e.target.classList.contains('gallery__image')) {
+    e.preventDefault();
+  }
+});

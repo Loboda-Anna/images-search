@@ -15,14 +15,20 @@ export default class ImagesApiService {
       page: this.page,
       per_page: 40,
     });
-    const imgs = axios
-      .get(`${BASE_URL}${API_KEY}&q=${this.searchQuery}&${params}`)
-      .then(resp => {
+    const getImgs = async () => {
+      try {
+        const resp = await axios.get(
+          `${BASE_URL}${API_KEY}&q=${this.searchQuery}&${params}`
+        );
         this.page += 1;
         return resp.data;
-      });
-    return imgs;
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+    return getImgs();
   }
+
   resetPage() {
     this.page = 1;
   }
