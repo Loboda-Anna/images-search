@@ -32,6 +32,8 @@ async function onSearchImages(e) {
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
+      clearGallery();
+      loadMoreBtn.hide();
       return;
     } else {
       Notify.success(`Hooray! We found ${imgs.total} images.`);
